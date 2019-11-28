@@ -1,31 +1,41 @@
 clear
 %%Consecutive Cloud Detector CONCLUDE
 matdir=['.out/mat' site]
-fl=ls('./cilnc/*.cfradial');
+datadir=['~/CR_work/ARM/DATA/' site '/'];
+flo=dir([datadir '*.nc']);
+j=1;
+for i=1:length(flo)
+    if flo(i).bytes>1000000
+        fl(j,:)=flo(i).name;
+        j=j+1;
+    end
+end
+clear flo
 fn=length(fl);
 j=0;
-maxtlen=length(t);
-maxhlen=length(h);
 nanthres=10;
-ref1mask=zeros(maxhlen,720);
-ref2mask=zeros(maxhlen,720);
-ldrthres=-10.5;
 k=1;
 for i=1:fn
     %% get vars
-    refmask=NaN(maxhlen,720);
-    fname1=strcat('./nqcnc/',fl(i,:));
-    fname2=strcat('./cilnc/',fl(i,:));
-    ref2inst=ncread(fname2,'reflectivity_h');
-    ref=ref2inst;
-    vel=ncread(fname2,'mean_doppler_velocity_h');
-    ldr=ncread(fname2,'linear_depolarization_ratio');
+    fname=strcat([datadir site '/'],fl(i,:));
+    try
+    t=ncread(fname,'time');
+    h=ncread(fname,'height');
+    maxtlen=length(t);
+    maxhlen=length(h);
+    refmask=NaN(maxhlen,maxtlen);
+    ref_inst=ncread(fname,'reflectivity_best_estimate');
+    ref_inst(ref_inst<-100)=NaN;
+    ref=ref_inst;
+    vel=ncread(fname,'mean_doppler_velocity');
+    vel(vel<-100)=NaN;
     k=0;
-    nanmask=ncread(fname1,'nyquist_velocity');
-    fday=str2num(fl(i,26:28));
-    fyear=str2num(fl(i,30:33));
+    iaf=ncread(fname,'instrument_availability_flag'); 
+    iaf(iaf<-100)=NaN;
+    nanmask=zeros(1,length(iaf));
+    nanmask(mod(iaf,2)==1)=11;
     nansatart=0;
-    nanlength=zeros(720,1);
+    nanlength=zeros(maxtlen,1);
     
     %% Check if the start of file is not valid
     if nanmask(1)<10
@@ -44,14 +54,14 @@ for i=1:fn
     %% Fill nonvalid cells 
     for ti=1:maxtlen
         if ti==1&&nanmask(ti)<10&&nanlength(ti)<nanthres
-            ref2inst(:,ti)=ref2inst(:,nanlength(ti)+1);
+            ref_inst(:,ti)=ref_inst(:,nanlength(ti)+1);
         elseif ti>1&&nanmask(ti)<10&&nanlength(ti)<nanthres
-            ref2inst(:,ti)=ref2inst(:,ti-1);
+            ref_inst(:,ti)=ref_inst(:,ti-1);
         end
     end
     %% From left to right Propagation
     for ti=1:maxtlen
-        ref_nn=find(~isnan(ref2inst(:,ti)));
+        ref_nn=find(~isnan(ref_inst(:,ti)));
         if ~isempty(ref_nn)
             cbhi=ref_nn(1);
             cthi=0;
@@ -66,13 +76,13 @@ for i=1:fn
                     if isnan(min(refmask(cbhi:cthi,ti)))
                         refmask(cbhi:cthi,ti)=k;
                         if ti <maxtlen
-                            refmask(find(~isnan(ref2inst(cbhi:cthi,ti+1)))+cbhi-1,ti:ti+1)=min(min(refmask(cbhi:cthi,ti:ti+1),[],'omitnan'),[],'omitnan');
+                            refmask(find(~isnan(ref_inst(cbhi:cthi,ti+1)))+cbhi-1,ti:ti+1)=min(min(refmask(cbhi:cthi,ti:ti+1),[],'omitnan'),[],'omitnan');
                         end
                         k=k+1;
                     elseif min(refmask(cbhi:cthi,ti))<k
                         refmask(cbhi:cthi,ti)=min(refmask(cbhi:cthi,ti));
                         if ti <maxtlen
-                            refmask(find(~isnan(ref2inst(cbhi:cthi,ti+1)))+cbhi-1,ti:ti+1)=min(min(refmask(cbhi:cthi,ti:ti+1),[],'omitnan'),[],'omitnan');
+                            refmask(find(~isnan(ref_inst(cbhi:cthi,ti+1)))+cbhi-1,ti:ti+1)=min(min(refmask(cbhi:cthi,ti:ti+1),[],'omitnan'),[],'omitnan');
                         end
                     end
                     if nnhi<length(ref_nn)
@@ -87,7 +97,7 @@ for i=1:fn
     end
     %% From Right to Left Propagation
     for ti=maxtlen:-1:1
-        ref_nn=find(~isnan(ref2inst(:,ti)));
+        ref_nn=find(~isnan(ref_inst(:,ti)));
         if ~isempty(ref_nn)
             cbhi=ref_nn(1);
             cthi=0;
@@ -116,14 +126,15 @@ for i=1:fn
                         cbhi=ref_nn(nnhi+1);
                     end
                 end
-                
             end
         end
         clear ref_nn
     end
-    fday=str2num(fl(i,26:28));
-    fyear=str2num(fl(i,30:33));
-    fmd=str2num(fl(i,34:37));
+    fnl=length(fname);
+    fday=str2num(fname(fnl-11:fnl-10));
+    fmonth=str2num(fname(fnl-13:fnl-12));
+    fyear=str2num(fname(fnl-17:fnl-14));
+    fmd=str2num(fname(fnl-13:fnl-10));
 
     if ~isempty(find(~isnan(refmask(:,1))))
         if fmd==101
@@ -222,8 +233,10 @@ for i=1:fn
             end
         end
     end
-    save(strcat(matdir,'/day_',fl(i,26:37)),'refmask','vel','ldr','nanlength')
+    save(strcat(matdir,'/day_',fl(i,26:37)),'refmask','vel','nanlength')
 clear ref* *mask nanlength nanstart
+catch
+    
 end
 %echovelmask;
 %h=[15:15:15000];

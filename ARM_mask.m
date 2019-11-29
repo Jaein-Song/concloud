@@ -1,6 +1,6 @@
-clear
 %%Consecutive Cloud Detector CONCLUDE
-matdir=['.out/mat' site]
+site=siteo{1}
+matdir=['./out/mat/' site '/'];
 datadir=['~/CR_work/ARM/DATA/' site '/'];
 flo=dir([datadir '*.nc']);
 j=1;
@@ -17,7 +17,7 @@ nanthres=10;
 k=1;
 for i=1:fn
     %% get vars
-    fname=strcat([datadir site '/'],fl(i,:));
+    fname=strcat([datadir ],fl(i,:))
     try
     t=ncread(fname,'time');
     h=ncread(fname,'height');
@@ -131,18 +131,20 @@ for i=1:fn
         clear ref_nn
     end
     fnl=length(fname);
-    fday=str2num(fname(fnl-11:fnl-10));
-    fmonth=str2num(fname(fnl-13:fnl-12));
-    fyear=str2num(fname(fnl-17:fnl-14));
-    fmd=str2num(fname(fnl-13:fnl-10));
-
+    fday=str2num(fname(fnl-11:fnl-10))
+    fmonth=str2num(fname(fnl-13:fnl-12))
+    fyear=str2num(fname(fnl-17:fnl-14))
+    fmd=str2num(fname(fnl-13:fnl-10))
+    [pyr pmn pda]=paday(1,fyear,fmonth,fday);
     if ~isempty(find(~isnan(refmask(:,1))))
-        if fmd==101
-            findl=strcat(matdir,'/*',num2str(fyear-1),num2str(1231),'.mat');
-        else
-            findl=strcat(matdir,'/day_',num2str(fday-1,'%03d'),'_',num2str(fyear),'*.mat');
-        end
-        pfilen=ls(findl);
+        %if fmd==101
+        %    findl=strcat(matdir,'/*',num2str(fyear-1),num2str(1231),'.mat');
+        %else
+        %    findl=strcat(matdir,'/day_',num2str(fday-1,'%03d'),'_',num2str(fyear),'*.mat');
+        %end
+        %pfilen=ls(findl);
+        findl=dir([matdir,num2str(pyr),num2str(pmn,'%02d'),num2str(pda,'%02d'),'*mat']);
+        pfilen=[matdir filndl.name]
         clear findl
 
         if ~isempty(pfilen)
@@ -189,13 +191,17 @@ for i=1:fn
     end
 
     if ~isempty(find(~isnan(refmask(:,maxtlen))))
-        if fmd==1231
-            findl=strcat('cilnc/*',num2str(fyear+1),num2str(101,'%04d'),'*.cfradial');
-        else
-            findl=strcat('cilnc/*',num2str(fday+1,'%03d'),'_',num2str(fyear),'*.cfradial');
-        end
-        afilen=ls(findl);
+    [ayr amn ada]=paday(0,fyear,fmonth,fday);
+        findl=dir([datadir,num2str(ayr),num2str(amn,'%02d'),num2str(ada,'%02d'),'*nc']);
+        afilen=[datadir filndl.name]
         clear findl
+        %if fmd==1231
+        %    findl=strcat('cilnc/*',num2str(fyear+1),num2str(101,'%04d'),'*.cfradial');
+        %else
+        %    findl=strcat('cilnc/*',num2str(fday+1,'%03d'),'_',num2str(fyear),'*.cfradial');
+        %end
+        %afilen=ls(findl);
+        %clear findl
         if isempty(afilen)
             for hi=1:maxhlen
                 mask=refmask(hi,maxtlen);
@@ -233,10 +239,10 @@ for i=1:fn
             end
         end
     end
-    save(strcat(matdir,'/day_',fl(i,26:37)),'refmask','vel','nanlength')
+    save(strcat(matdir,'/day_',fname(fnl-17:fnl-10)),'refmask','vel','nanlength')
 clear ref* *mask nanlength nanstart
 catch
-    
+end    
 end
 %echovelmask;
 %h=[15:15:15000];

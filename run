@@ -1,8 +1,8 @@
 #!/bin/sh
-nohup matlab -nodesktop -nosplash -r 'site='SGP';try ARM_mask;catch; disp('error_SGP'); end; quit' >sgp.log&
-nohup matlab -nodesktop -nosplash -r 'site='TWP';try ARM_mask;catch; disp('error_TWP'); end; quit' >twp.log&
-nohup matlab -nodesktop -nosplash -r 'site='ENA';try ARM_mask;catch; disp('error_ENA'); end; quit' >ena.log&
-nohup matlab -nodesktop -nosplash -r 'site='OLI';try ARM_mask;catch; disp('error_OLI'); end; quit' >oli.log&
-nohup matlab -nodesktop -nosplash -r 'site='NSA';try ARM_mask;catch; disp('error_NSA'); end; quit' >nsa.log&
-nohup matlab -nodesktop -nosplash -r 'site='ASI';try ARM_mask;catch; disp('error_ASI'); end; quit' >asi.log&
-nohup matlab -nodesktop -nosplash -r 'site='AWR';try ARM_mask;catch; disp('error_AWR'); end; quit' >awr.log&
+nohup matlab -nojvm -nodesktop -nosplash -r 'siteo="SGP";try ARM_mask;catch; disp("error_SGP"); end; quit' >sgp.log&
+nohup matlab -nojvm -nodesktop -nosplash -r 'siteo="TWP";try ARM_mask;catch; disp("error_TWP"); end; quit' >twp.log&
+nohup matlab -nojvm -nodesktop -nosplash -r 'siteo="ENA";try ARM_mask;catch; disp("error_ENA"); end; quit' >ena.log&
+nohup matlab -nojvm -nodesktop -nosplash -r 'siteo="OLI";try ARM_mask;catch; disp("error_OLI"); end; quit' >oli.log&
+nohup matlab -nojvm -nodesktop -nosplash -r 'siteo="NSA";try ARM_mask;catch; disp("error_NSA"); end; quit' >nsa.log&
+nohup matlab -nojvm -nodesktop -nosplash -r 'siteo="NSA";try ARM_mask;catch; disp("error_ASI"); end; quit' >asi.log&
+nohup matlab -nojvm -nodesktop -nosplash -r 'siteo="NSA";try ARM_mask;catch; disp("error_AWR"); end; quit' >awr.log&

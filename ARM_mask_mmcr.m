@@ -2,7 +2,7 @@
 site=siteo{1}
 matdir=['./out/mat/' site '/'];
 datadir=['~/ARM_CRML/MMCR/' site '/'];
-flo=dir([datadir '*.nc']);
+flo=dir([datadir '*.cdf']);
 j=1;
 for i=1:length(flo)
     if flo(i).bytes>1000000

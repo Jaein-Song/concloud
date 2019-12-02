@@ -133,10 +133,10 @@ for i=1:fn
         clear ref_nn
     end
     fnl=length(fname);
-    fday=str2num(fname(fnl-11:fnl-10))
-    fmonth=str2num(fname(fnl-13:fnl-12))
-    fyear=str2num(fname(fnl-17:fnl-14))
-    fmd=str2num(fname(fnl-13:fnl-10))
+    fday=str2num(fname(fnl-11:fnl-10));
+    fmonth=str2num(fname(fnl-13:fnl-12));
+    fyear=str2num(fname(fnl-17:fnl-14));
+    fmd=str2num(fname(fnl-13:fnl-10));
     [pyr pmn pda]=paday(1,fyear,fmonth,fday);
     if ~isempty(find(~isnan(refmask(:,1))))
         %if fmd==101
@@ -244,6 +244,7 @@ for i=1:fn
     save(strcat(matdir,'/day_',fname(fnl-17:fnl-10)),'ref','refmask','ldr','vel','nanlength')
 clear ref* *mask nanlength nanstart
 catch
+    disp(['error' fl(i,:)])
 end    
 end
 %echovelmask;

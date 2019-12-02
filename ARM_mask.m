@@ -212,7 +212,7 @@ for i=1:fn
         end
         clear afilen
     end
-    k=1+str2num(fl(i,30:37))*10^(-8);
+    k=1+str2num(fname(fnl-17:fnl-10))*10^(-8);
 
     for mi=floor(min(min(refmask))):floor(max(max(refmask)))
         if ~isempty(refmask==mi)

@@ -19,23 +19,21 @@ for i=1:fn
     %% get vars
     fname=strcat([datadir ],fl(i,:))
     try
-    t=ncread(fname,'time');
-    h=ncread(fname,'height');
+    t=ncread(fname,'time_offset');
+    h=ncread(fname,'Heights');
     maxtlen=length(t);
     maxhlen=length(h);
     refmask=NaN(maxhlen,maxtlen);
-    ref_inst=ncread(fname,'reflectivity_best_estimate');
+    ref_inst=double(ncread(fname,'ReflectivityBestEstimate'))/100;
     ref_inst(ref_inst<-100)=NaN;
     ref=ref_inst;
-    vel=ncread(fname,'mean_doppler_velocity');
-    vel(vel<-100)=NaN;
-    ldr=ncread(fname,'linear_depolariztion_ratio');
-    ldr(vel<-100)=NaN;
+    vel=double(ncread(fname,'MeanDopplerVelocity'))/1000;
+    vel(vel<-30)=NaN;
     k=0;
-    iaf=ncread(fname,'instrument_availability_flag'); 
-    iaf(iaf<-100)=NaN;
-    nanmask=zeros(1,length(iaf));
-    nanmask(mod(iaf,2)==1)=11;
+    iaf=ncread(fname,'ModeId'); 
+    iaf=double(iaf); 
+    nanmask=iaf(1,:)+1;
+    %nanmask(mod(iaf,2)==1)=11;
     nansatart=0;
     nanlength=zeros(maxtlen,1);
     
@@ -212,7 +210,7 @@ for i=1:fn
         end
         clear afilen
     end
-    k=1+str2num(fl(i,30:37))*10^(-8);
+    k=1+str2num(fname(fnl-17:fnl-10))*10^(-8);
 
     for mi=floor(min(min(refmask))):floor(max(max(refmask)))
         if ~isempty(refmask==mi)
@@ -241,7 +239,7 @@ for i=1:fn
             end
         end
     end
-    save(strcat(matdir,'/day_',fname(fnl-17:fnl-10)),'ref','refmask','ldr','vel','nanlength')
+    save(strcat(matdir,'/day_',fname(fnl-17:fnl-10)),'ref','refmask','vel','nanlength')
 clear ref* *mask nanlength nanstart
 catch
     disp(['error' fl(i,:)])

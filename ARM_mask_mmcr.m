@@ -1,7 +1,7 @@
 %%Consecutive Cloud Detector CONCLUDE
 site=siteo{1}
 matdir=['./out/mat/' site '/'];
-datadir=['~/CR_work/ARM/DATA/' site '/'];
+datadir=['~/ARM_CRML/MMCR/' site '/'];
 flo=dir([datadir '*.nc']);
 j=1;
 for i=1:length(flo)

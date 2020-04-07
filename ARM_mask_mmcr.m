@@ -1,5 +1,6 @@
 %%Consecutive Cloud Detector CONCLUDE
 site=siteo{1}
+%site='SGP'
 matdir=['./out/mat/' site '/'];
 datadir=['~/ARM_CRML/MMCR/' site '/'];
 flo=dir([datadir '*.cdf']);
@@ -144,10 +145,10 @@ for i=1:fn
         %end
         %pfilen=ls(findl);
         findl=dir([matdir,num2str(pyr),num2str(pmn,'%02d'),num2str(pda,'%02d'),'*mat']);
-        pfilen=[matdir filndl.name]
-        clear findl
+        pfilen=[matdir findl.name]
 
-        if ~isempty(pfilen)
+        if ~isempty(findl)
+        clear findl
             pfilen=strcat(matdir,'/',pfilen);
             prev=load(pfilen);
             minmask=min(refmask(:,1));
@@ -193,7 +194,7 @@ for i=1:fn
     if ~isempty(find(~isnan(refmask(:,maxtlen))))
     [ayr amn ada]=paday(0,fyear,fmonth,fday);
         findl=dir([datadir,num2str(ayr),num2str(amn,'%02d'),num2str(ada,'%02d'),'*nc']);
-        afilen=[datadir filndl.name]
+        afilen=[datadir findl.name]
         clear findl
         %if fmd==1231
         %    findl=strcat('cilnc/*',num2str(fyear+1),num2str(101,'%04d'),'*.cfradial');
@@ -239,10 +240,11 @@ for i=1:fn
             end
         end
     end
-    save(strcat(matdir,'/day_',fname(fnl-17:fnl-10)),'ref','refmask','vel','nanlength')
+    disp(strcat('out file:', matdir,'day_',fname(fnl-18:fnl-11)))
+    save(strcat(matdir,'day_',fname(fnl-18:fnl-11)),'ref','refmask','vel','nanlength')
 clear ref* *mask nanlength nanstart
 catch
-    disp(['error' fl(i,:)])
+    disp(['error: ' fl(i,:)])
 end    
 end
 %echovelmask;

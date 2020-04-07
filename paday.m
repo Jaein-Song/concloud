@@ -28,9 +28,9 @@ function [ ry, rm, rd ] = paday (pa_flag, yr, mn, da)
        else
            eday=31;
        end
-       if day~=eday
+       if da~=eday
            ry=yr;rm=mn;rd=da+1;
-       elseif day==eday&&mn<12
+       elseif da==eday&&mn<12
            ry=yr;rm=mn+1;rd=1;
        else
            ry=yr+1;rm=1;rd=1;

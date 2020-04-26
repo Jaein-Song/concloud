@@ -24,6 +24,7 @@ for i=1:fn
     h=ncread(fname,'Heights');
     maxtlen=length(t);
     maxhlen=length(h);
+    if maxtlen==8640&&maxhlen==512
     refmask=NaN(maxhlen,maxtlen);
     ref_inst=double(ncread(fname,'ReflectivityBestEstimate'))/100;
     ref_inst(ref_inst<-100)=NaN;
@@ -211,7 +212,7 @@ for i=1:fn
         end
         clear afilen
     end
-    k=1+str2num(fname(fnl-17:fnl-10))*10^(-8);
+    k=1+str2num(fname(fnl-18:fnl-11))*10^(-8);
 
     for mi=floor(min(min(refmask))):floor(max(max(refmask)))
         if ~isempty(refmask==mi)
@@ -240,9 +241,10 @@ for i=1:fn
             end
         end
     end
-    disp(strcat('out file:', matdir,'day_',fname(fnl-18:fnl-11)))
-    save(strcat(matdir,'day_',fname(fnl-18:fnl-11)),'ref','refmask','vel','nanlength')
+    disp(strcat('out file:', matdir,'MMCR_day_',fname(fnl-18:fnl-11)))
+    save(strcat(matdir,'MMCR_day_',fname(fnl-18:fnl-11)),'ref','refmask','vel','nanlength','t','h','nanmask')
 clear ref* *mask nanlength nanstart
+end
 catch
     disp(['error: ' fl(i,:)])
 end    

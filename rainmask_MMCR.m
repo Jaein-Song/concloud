@@ -4,7 +4,7 @@ datadir=['~/CR_work/ARM/DATA/' site '/'];
 flo=dir([matdir 'MMCR*.mat']);
 j=1;
 for i=1:length(flo)
-    if flo(i).bytes>1000000
+    if flo(i).bytes>10000
         fl(j,:)=flo(i).name;
         j=j+1;
     end

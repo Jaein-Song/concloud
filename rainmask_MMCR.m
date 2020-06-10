@@ -34,6 +34,11 @@ rains00m=zeros(maxtlen,12);
 rains10m=zeros(maxtlen,12);
 ntotal=zeros(maxtlen,1);
 ntotalm=zeros(maxtlen,12);
+i=1;
+while h(i)<300
+    i=i+1
+end
+m300=i;
 for i=1:fn
     matfname=strcat([matdir,fl(i,:)]);
     load(matfname)
@@ -57,21 +62,21 @@ for i=1:fn
         if nanmask(ti)>10
             ntotal(ti)=ntotal(ti)+1;
             ntotalm(ti,m)=ntotalm(ti,m)+1;
-            if ref2inst(20,ti)>-15
+            if ref2inst(m300,ti)>-15
                 rainflag(ti)=1;
                 rains15(ti)=rains15(ti)+1;
                 rains15m(ti,m)=rains15m(ti,m)+1;
-                if ref2inst(20,ti)>0
+                if ref2inst(m300,ti)>0
                     rainflag00(ti)=1;
                     rains00(ti)=rains00(ti)+1;
                     rains00m(ti,m)=rains00m(ti,m)+1;
-                    if ref2inst(20,ti)>10
+                    if ref2inst(m300,ti)>10
                         rainflag10(ti)=1;
                         rains10(ti)=rains10(ti)+1;
                         rains10m(ti,m)=rains10m(ti,m)+1;
                     end
                 end
-                rainmask(1:20,ti)=1;
+                rainmask(1:m300,ti)=1;
             end
         end
     end
@@ -82,5 +87,6 @@ rainmask(isnan(ref2inst))=NaN;
     save(matfname,'rainmask','rainflag10','-append');
 end
 
-save('rainechos','rains*','ntotal*')
+save(['MMCRrainechos_' site],'rains*','ntotal*')
+ARM_maskcomp_MMCR
 % save('rainlist','rainl','rainls');

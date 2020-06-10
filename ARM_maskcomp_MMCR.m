@@ -1,7 +1,7 @@
 site=siteo{1}
 matdir=['./out/mat/' site '/'];
 datadir=['~/CR_work/ARM/DATA/' site '/'];
-flo=dir([matdir 'day*.mat']);
+flo=dir([matdir 'MMCR*.mat']);
 j=1;
 for i=1:length(flo)
     if flo(i).bytes>10000
@@ -42,7 +42,8 @@ nanthres=10;
 ldrthres=-10.5;
 
 mdiv=4;
-if mdiv==1
+if mdiv==4
+elseif mdiv==1
     mlist=[1:1:12];
 end
 for ri=1:7
@@ -73,7 +74,7 @@ ref2mask=zeros(nh,nt);
                 ref2inst=ref;
                 clear ref;
                 
-                if  ri==1
+                if ri==1
                     load(matfname,'rainmask')
                     ref2mask(rainmask==0)=ref2mask(rainmask==0)+1;
                     clear rainmask
@@ -108,7 +109,7 @@ ref2mask=zeros(nh,nt);
                     ref2mask(velmask==1)=ref2mask(velmask==1)+1;
                     clear refmask velmask
                 end
-                load(matfname,'nanmask')
+                load(matfname,'nanmask');
                 nums(1:nh,nanmask>10)=nums(1:nh,nanmask>10)+1;
              clear *inst *1m nanmask
             end
@@ -240,21 +241,20 @@ Figure_make
 catch
 end
 
-
         if ri==1
-            save(['KAZR' 'norain' site],'out','refmask*');
+            save(['MMCR' 'norain'  site],'out','refmask*');
         elseif ri==2
-            save(['KAZR' 'rain' site],'out','refmask*');
+            save(['MMCR' 'rain'  site],'out','refmask*');
         elseif ri==3
-            save(['KAZR' 'raincol' site],'out','refmask*');
+            save(['MMCR' 'raincol'  site],'out','refmask*');
         elseif ri==4
-            save(['KAZR' 'noraincol' site],'out','refmask*');
+            save(['MMCR' 'noraincol'  site],'out','refmask*');
         elseif ri==5
-            save(['KAZR' 'raincell' site],'out','refmask*');
+            save(['MMCR' 'raincell'  site],'out','refmask*');
         elseif ri==6
-            save(['KAZR' 'norainsys' site],'out','refmask*');
+            save(['MMCR' 'norainsys'  site],'out','refmask*');
         elseif ri==7
-            save(['KAZR' 'rainsys' site],'out','refmask*');
+            save(['MMCR' 'rainsys'  site],'out','refmask*');
         end
     else
       
@@ -271,19 +271,19 @@ end
         refmaskTOTLST_24(:,26)=refmaskTOTLST_24(:,2);
 
         if ri==1
-            save(['KAZR' 'norain' site],'out','refmask*');
+            save(['MMCR' 'norain' site],'out','refmask*');
         elseif ri==2
-            save(['KAZR' 'rain' site],'out','refmask*');
+            save(['MMCR' 'rain' site],'out','refmask*');
         elseif ri==3
-            save(['KAZR' 'raincol' site],'out','refmask*');
+            save(['MMCR' 'raincol' site],'out','refmask*');
         elseif ri==4
-            save(['KAZR' 'noraincol' site],'out','refmask*');
+            save(['MMCR' 'noraincol' site],'out','refmask*');
         elseif ri==5
-            save(['KAZR' 'raincell' site],'out','refmask*');
+            save(['MMCR' 'raincell' site],'out','refmask*');
         elseif ri==6
-            save(['KAZR' 'norainsys' site],'out','refmask*');
+            save(['MMCR' 'norainsys' site],'out','refmask*');
         elseif ri==7
-            save(['KAZR' 'rainsys' site],'out','refmask*');
+            save(['MMCR' 'rainsys' site],'out','refmask*');
         end
     end
 end

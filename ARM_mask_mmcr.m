@@ -6,7 +6,7 @@ datadir=['~/ARM_CRML/MMCR/' site '/'];
 flo=dir([datadir '*.cdf']);
 j=1;
 for i=1:length(flo)
-    if flo(i).bytes>1000000
+    if flo(i).bytes>10000000
         fl(j,:)=flo(i).name;
         j=j+1;
     end
@@ -22,23 +22,25 @@ for i=1:fn
     try
     t=ncread(fname,'time_offset');
     h=ncread(fname,'Heights');
+    td=t(2)-t(1);
+    nanthres=1200/td;
     maxtlen=length(t);
     maxhlen=length(h);
     if maxtlen==8640&&maxhlen==512
     refmask=NaN(maxhlen,maxtlen);
-    ref_inst=double(ncread(fname,'ReflectivityBestEstimate'))/100;
+    velmask=NaN(maxhlen,maxtlen);
+    ref_inst=ncread(fname,'ReflectivityBestEstimate');
     ref_inst(ref_inst<-100)=NaN;
     ref=ref_inst;
-    vel=double(ncread(fname,'MeanDopplerVelocity'))/1000;
-    vel(vel<-30)=NaN;
+    vel=ncread(fname,'MeanDopplerVelocity');
+    vel(vel<-100)=NaN;
     k=0;
-    iaf=ncread(fname,'ModeId'); 
-    iaf=double(iaf); 
-    nanmask=iaf(1,:)+1;
-    %nanmask(mod(iaf,2)==1)=11;
+    mid=ncread(fname,'ModeId');
+    iaf=mid(1,:)-1+1;
+    nanmask=zeros(1,length(iaf));
+    nanmask(mod(iaf,10)>0)=11;
     nansatart=0;
     nanlength=zeros(maxtlen,1);
-    
     %% Check if the start of file is not valid
     if nanmask(1)<10
        nanstart=1;
@@ -92,7 +94,15 @@ for i=1:fn
 
                     end
                 end
-                
+            end
+        end
+        if min(vel(:,ti))<-1.5
+            vfl=find(vel(:,ti)==min(vel(:,ti)));
+            vl=vfl(1);
+            clear vfl
+            if ~isnan(velmask(vl,ti))
+                indexes=find(refmask==refmask(vl,ti));
+                velmask(indexes)=refmask(vl,ti);
             end
         end
         clear ref_nn
@@ -113,7 +123,6 @@ for i=1:fn
                 
                 if cthi>=cbhi
                     if ~isnan(min(refmask(cbhi:cthi,ti)))
-                        
                         refmask(cbhi:cthi,ti)=min(refmask(cbhi:cthi,ti));
                         if ti >1
                             mask_min=min(min(refmask(cbhi:cthi,ti-1:ti),[],'omitnan'),[],'omitnan');
@@ -130,6 +139,15 @@ for i=1:fn
                 end
             end
         end
+        if min(vel(:,ti))<-1.5
+            vfl=find(vel(:,ti)==min(vel(:,ti)));
+            vl=vfl(1);
+            clear vfl
+            if ~isnan(velmask(vl,ti))||velmask(vl,ti)~=refmask(vl,ti)
+                indexes=find(refmask==refmask(vl,ti));
+                velmask(indexes)=refmask(vl,ti);
+            end
+        end
         clear ref_nn
     end
     fnl=length(fname);
@@ -139,23 +157,15 @@ for i=1:fn
     fmd=str2num(fname(fnl-13:fnl-10));
     [pyr pmn pda]=paday(1,fyear,fmonth,fday);
     if ~isempty(find(~isnan(refmask(:,1))))
-        %if fmd==101
-        %    findl=strcat(matdir,'/*',num2str(fyear-1),num2str(1231),'.mat');
-        %else
-        %    findl=strcat(matdir,'/day_',num2str(fday-1,'%03d'),'_',num2str(fyear),'*.mat');
-        %end
-        %pfilen=ls(findl);
         findl=dir([matdir,num2str(pyr),num2str(pmn,'%02d'),num2str(pda,'%02d'),'*mat']);
         pfilen=[matdir findl.name]
 
         if ~isempty(findl)
-        clear findl
+            clear findl
             pfilen=strcat(matdir,'/',pfilen);
             prev=load(pfilen);
             minmask=min(refmask(:,1));
             maxmask=max(refmask(:,1));
-            ie(:,i*2-1)=prev.refmask(:,maxtlen);
-            ie(:,i*2)=refmask(:,1);
 
             for hi=1:maxhlen
                 if ~isnan(prev.refmask(hi,maxtlen))&&~isnan(refmask(hi,1))
@@ -169,12 +179,16 @@ for i=1:fn
                         if min_mask~=max_mask
                             prev.refmask(prev.refmask==max_mask)=min_mask;
                             refmask(refmask==max_mask)=min_mask;
+                            if isfield(prev,'velmask')&&~isnan(prev.velmask(hi,maxtlen))&&isnan(velmask(hi,1))
+                                velmask(refmask==refmask(hi,1))=prev.velmask(hi,maxtlen);
+                            elseif isfield(prev,'velmask')&&isnan(prev.velmask(hi,maxtlen))&&~isnan(velmask(hi,1))
+                                p
+                                prev.velmask(refmask==refmask(hi,maxtlen))=velmask(hi,1);
+                            end
                         end
                     end
                 end
             end
-            ie2(:,i*2-1)=prev.refmask(:,maxtlen);
-            ie2(:,i*2)=refmask(:,1);
             refmask_pres=refmask;
             refmask=prev.refmask;
             save(pfilen,'refmask','-append');
@@ -197,22 +211,16 @@ for i=1:fn
         findl=dir([datadir,num2str(ayr),num2str(amn,'%02d'),num2str(ada,'%02d'),'*nc']);
         afilen=[datadir findl.name]
         clear findl
-        %if fmd==1231
-        %    findl=strcat('cilnc/*',num2str(fyear+1),num2str(101,'%04d'),'*.cfradial');
-        %else
-        %    findl=strcat('cilnc/*',num2str(fday+1,'%03d'),'_',num2str(fyear),'*.cfradial');
-        %end
-        %afilen=ls(findl);
-        %clear findl
         if isempty(afilen)
             for hi=1:maxhlen
                 mask=refmask(hi,maxtlen);
                 refmask(refmask==mask)=NaN;
+                velmask(velmask==mask)=NaN;
             end
         end
         clear afilen
     end
-    k=1+str2num(fname(fnl-18:fnl-11))*10^(-8);
+    k=1+str2num(fname(fnl-17:fnl-10))*10^(-8);
 
     for mi=floor(min(min(refmask))):floor(max(max(refmask)))
         if ~isempty(refmask==mi)
@@ -237,7 +245,33 @@ for i=1:fn
                 end
             end
             if ni==1&&nanlength(ni)>nanthres
-                
+            end
+        end
+    end
+    
+    for mi=floor(min(min(velmask))):floor(max(max(velmask)))
+        if ~isempty(velmask==mi)
+             if length(find(velmask==mi))>4
+                velmask(velmask==mi&velmask-mi<0.1)=k;
+                k=k+1;
+             else
+                 mi;
+                 velmask(velmask==mi)=NaN;
+             end
+        end
+    end
+    if min(nanlength)>nanthres
+        for ni=1:maxtlen-1
+            if nanlength(ni)>nanthres&&nanlength(ni+1)<nanthres
+                for hi=1:maxhlen
+                    velmask(velmask==velmask(hi,ni+1))=NaN;
+                end
+            elseif nanlength(ni)<nanthres&&nanlength(ni+1)>nanthres
+                for hi=1:maxhlen
+                    velmask(velmask==velmask(hi,ni))=NaN;
+                end
+            end
+            if ni==1&&nanlength(ni)>nanthres
             end
         end
     end
@@ -249,6 +283,8 @@ catch
     disp(['error: ' fl(i,:)])
 end    
 end
+clear r* f* m*  t* h* n* 
+rainmask_MMCR
 %echovelmask;
 %h=[15:15:15000];
 %t=[120:120:86400]/3600;

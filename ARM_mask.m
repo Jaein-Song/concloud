@@ -9,7 +9,6 @@ end
 radar.tlen=[8940,21600];
 radar.hlen=[596,512];
 radar.datadir={['~/ARM_CRML/MMCR/' site '/'],['~/CR_work/ARM/DATA/' site '/']};
-radar.flo={dir([datadir '*cdf']), dir([datadir '.nc'])}
 radar.Zname={['ReflectivityBestEstimate'],['reflectivity_best_estimate']};
 radar.Vname={['MeanDopplerVelocity'],['mean_doppler_velocity']};
 radar.LDRname={[],['linear_depolarization_ratio']};
@@ -17,11 +16,12 @@ radar.IAFname={['ModeId'],['instrument_availability_flag']};
 radar.tname={['time_offset'],['time']};
 radar.hname={['Heights'],['height']};
 radar.minByte=[10000000,20000000];
-
+radar.expansion={['*cdf'],['*nc']}
+flo=dir([radar.datadir{radarindex} radar.expansion{radarindex}])
 j=1;
-for i=1:length(radar.flo{radarindex})
+for i=1:length(flo)
     if flo(i).bytes > radar.minByte(radarindex)
-        fl(j,:)=radar.flo{radarindex}(i).name;
+        fl(j,:)=flo(i).name;
         j=j+1;
     end
 end
@@ -33,7 +33,7 @@ k=1;
 for i=1:fn
     %%INITIALIZE
     %% Get vars
-    fname=strcat(datadir ,fl(i,:))
+    fname=strcat(radar.datadir{radarindex} ,fl(i,:))
     try
     t=ncread(fname,radar.tname{radarindex});
     h=ncread(fname,radar.hname{radarindex});
@@ -41,7 +41,7 @@ for i=1:fn
     nanthres=1200/td;
     maxtlen=length(t);
     maxhlen=length(h);
-    if maxtlen==radartlen&&maxhlen==radarhlen
+    if maxtlen==radar.tlen(radarindex)&&maxhlen==radar.hlen(radarindex)
     refmask=NaN(maxhlen,maxtlen);
     velmask=NaN(maxhlen,maxtlen);
     Z=ncread(fname,radar.Zname{radarindex});
@@ -262,8 +262,8 @@ for i=1:fn
 
     if ~isempty(find(~isnan(refmask(:,maxtlen))))
     [ayr amn ada]=paday(0,fyear,fmonth,fday);
-        findl=dir([datadir,num2str(ayr),num2str(amn,'%02d'),num2str(ada,'%02d'),'*nc']);
-        afilen=[datadir findl.name]
+        findl=dir([radar.datadir{radarindex},num2str(ayr),num2str(amn,'%02d'),num2str(ada,'%02d'),'*nc']);
+        afilen=[radar.datadir{radarindex} findl.name]
         clear findl
         if isempty(afilen)
             for hi=1:maxhlen
@@ -304,9 +304,9 @@ for i=1:fn
     end
     disp(strcat('outfile:',matdir,'/day_',ymd))
     if isMMCR
-        save(strcat(matdir,'/MMCR_day_',ymd,'t','h','validmask','ref','refmask','ldr','vel','velmask','nanlength')
+        save(strcat(matdir,'/MMCR_day_',ymd,'t','h','validmask','ref','refmask','ldr','vel','velmask','nanlength'))
     else
-        save(strcat(matdir,'/day_',ymd,'t','h','validmask','ref','refmask','ldr','vel','velmask','nanlength')
+        save(strcat(matdir,'/day_',ymd,'t','h','validmask','ref','refmask','ldr','vel','velmask','nanlength'))
     end
 
 clear ref* *mask nanlength nanstart

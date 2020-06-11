@@ -22,7 +22,7 @@ while [ $i -lt $sitenum ]; do
     echo ${sites[$i]}
     site=\"${sites[$i]}\"
     echo $site
-    logfile=MMCR${sites[$i]}.log
+    logfile=MMCR_${sites[$i]}.log
     echo $logfile 
     errmsg="\"Error occurred: site = ${sites[$i]}\""
     cmdline="siteo=$site;isMMCR=1;try;ARM_mask;catch;end;exit"

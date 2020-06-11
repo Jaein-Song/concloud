@@ -1,13 +1,27 @@
 %%Consecutive Cloud Detector CONCLUDE
 site=siteo{1}
-%site='SGP'
 matdir=['./out/mat/' site '/'];
-datadir=['~/CR_work/ARM/DATA/' site '/'];
-flo=dir([datadir '*.nc']);
+if isMMCR
+    radarindex = 1;
+else
+    radarindex = 2;
+end
+radar.tlen=[8940,21600];
+radar.hlen=[596,512];
+radar.datadir={['~/ARM_CRML/MMCR/' site '/'],['~/CR_work/ARM/DATA/' site '/']};
+radar.flo={dir([datadir '*cdf']), dir([datadir '.nc'])}
+radar.Zname={['ReflectivityBestEstimate'],['reflectivity_best_estimate']};
+radar.Vname={['MeanDopplerVelocity'],['mean_doppler_velocity']};
+radar.LDRname={[],['linear_depolarization_ratio']};
+radar.IAFname={['ModeId'],['instrument_availability_flag']};
+radar.tname={['time_offset'],['time']};
+radar.hname={['Heights'],['height']};
+radar.minByte=[10000000,20000000];
+
 j=1;
-for i=1:length(flo)
-    if flo(i).bytes>20000000
-        fl(j,:)=flo(i).name;
+for i=1:length(radar.flo{radarindex})
+    if flo(i).bytes > radar.minByte(radarindex)
+        fl(j,:)=radar.flo{radarindex}(i).name;
         j=j+1;
     end
 end
@@ -17,114 +31,152 @@ j=0;
 nanthres=10;
 k=1;
 for i=1:fn
-    %% get vars
+    %%INITIALIZE
+    %% Get vars
     fname=strcat(datadir ,fl(i,:))
     try
-    t=ncread(fname,'time');
-    h=ncread(fname,'height');
+    t=ncread(fname,radar.tname{radarindex});
+    h=ncread(fname,radar.hname{radarindex});
     td=t(2)-t(1);
     nanthres=1200/td;
     maxtlen=length(t);
     maxhlen=length(h);
-    if maxtlen==21600&&maxhlen==596
+    if maxtlen==radartlen&&maxhlen==radarhlen
     refmask=NaN(maxhlen,maxtlen);
     velmask=NaN(maxhlen,maxtlen);
-    ref_inst=ncread(fname,'reflectivity_best_estimate');
-    ref_inst(ref_inst<-100)=NaN;
-    ref=ref_inst;
-    vel=ncread(fname,'mean_doppler_velocity');
+    Z=ncread(fname,radar.Zname{radarindex});
+    Z(Z<-100)=NaN;
+    vel=ncread(fname,radar.Vname{radarindex});
     vel(vel<-100)=NaN;
-    ldr=ncread(fname,'linear_depolarization_ratio');
-    ldr(vel<-100)=NaN;
+    try
+        ldr=ncread(fname,radar.LDRname{radarindex});
+        ldr(vel<-100)=NaN;
+    catch
+        ldr=NaN(size(Z));
+    end
     k=0;
-    iaf=ncread(fname,'instrument_availability_flag'); 
-    iaf(iaf<-100)=NaN;
-    nanmask=zeros(1,length(iaf));
-    nanmask(mod(iaf,2)==1)=11;
+    iaf=ncread(fname,radar.IAFname{radarindex}); 
+    if radarindex == 1
+        iaf(iaf<-100)=0;
+        validmask=zeros(1,length(iaf));
+        validmask=mod(iaf,2);
+    else
+        mid = iaf;
+        iaf=mid(1,:)*1;
+        clear mid
+        validmask=zeros(1,length(iaf));
+        validmask=mod(iaf,10)==0;
+    end
+    clear validmask
     nansatart=0;
     nanlength=zeros(maxtlen,1);
+    %%INITIALIZE END    
     
     %% Check if the start of file is not valid
-    if nanmask(1)<10
+    if validmask(1)
        nanstart=1;
        nanlength(1)=1;
     end
     %% Count non-valid columns
     for ti=2:maxtlen
-        if nanmask(ti-1)<10&&nanmask(ti)<10
+        if ~validmask(ti-1)&&~validmask(ti)
             nanlength(nanstart:ti)=nanlength(nanstart)+1;
-        elseif nanmask(ti)<10
+        elseif validmask(ti-1)&&~validmask(ti)
             nanstart=ti;
             nanlength(ti)=1;
         end
     end
     %% Fill nonvalid cells 
     for ti=1:maxtlen
-        if ti==1&&nanmask(ti)<10&&nanlength(ti)<nanthres
-            ref_inst(:,ti)=ref_inst(:,nanlength(ti)+1);
-        elseif ti>1&&nanmask(ti)<10&&nanlength(ti)<nanthres
-            ref_inst(:,ti)=ref_inst(:,ti-1);
+        if ti==1&&~validmask(ti)&&nanlength(ti)<nanthres
+            Z(:,ti)=Z(:,nanlength(ti)+1);
+        elseif ti>1&&~validmask(ti)&&nanlength(ti)<nanthres
+            Z(:,ti)=Z(:,ti-1);
         end
     end
     %% From left to right Propagation
     for ti=1:maxtlen
-        ref_nn=find(~isnan(ref_inst(:,ti)));
+        ref_nn=find(~isnan(Z(:,ti)));
         if ~isempty(ref_nn)
             cbhi=ref_nn(1);
             cthi=0;
-            for nnhi=1:length(ref_nn)
-                if nnhi==length(ref_nn)
-                    cthi=ref_nn(nnhi);
-                elseif ref_nn(nnhi)<ref_nn(nnhi+1)-1
-                    cthi=ref_nn(nnhi);
+            cth=ref_nn(diff(ref_nn>1));
+            if iesempty(cth)
+                cbhi=ref_nn(1);
+                cthi=ref_nn(length(ref_nn));
+                layer=1;
+            else 
+                cbh(1)=ref_nn(1);
+                layeri=1;
+                for layerj=1:length(ref_nn)
+                    if cth(layeri)==ref_nn(layerj)
+                        layeri=layeri+1; 
+                        cbh(layeri)=ref_nn(layerj+1);
+                    end
+                    if layeri >length(cth)
+                        break
+                    end
                 end
-                
+                layer=length(cbh)+1;
+                cth(layer)=ref_nn(length(ref_nn));
+            end
+
+            for layeri=1:layer
+                cbhi=cbh(layeri);
+                cthi=cth(layeri);
                 if cthi>=cbhi
                     if isnan(min(refmask(cbhi:cthi,ti)))
                         refmask(cbhi:cthi,ti)=k;
                         if ti <maxtlen
-                            refmask(find(~isnan(ref_inst(cbhi:cthi,ti+1)))+cbhi-1,ti:ti+1)=min(min(refmask(cbhi:cthi,ti:ti+1),[],'omitnan'),[],'omitnan');
+                            refmask(find(~isnan(Z(cbhi:cthi,ti+1)))+cbhi-1,ti:ti+1)=min(min(refmask(cbhi:cthi,ti:ti+1),[],'omitnan'),[],'omitnan');
                         end
                         k=k+1;
                     elseif min(refmask(cbhi:cthi,ti))<k
                         refmask(cbhi:cthi,ti)=min(refmask(cbhi:cthi,ti));
                         if ti <maxtlen
-                            refmask(find(~isnan(ref_inst(cbhi:cthi,ti+1)))+cbhi-1,ti:ti+1)=min(min(refmask(cbhi:cthi,ti:ti+1),[],'omitnan'),[],'omitnan');
+                            refmask(find(~isnan(Z(cbhi:cthi,ti+1)))+cbhi-1,ti:ti+1)=min(min(refmask(cbhi:cthi,ti:ti+1),[],'omitnan'),[],'omitnan');
                         end
                     end
-                    if nnhi<length(ref_nn)
-                        cbhi=ref_nn(nnhi+1);
-
+                    if layeri==1&&min(vel(cbhi:cthi,ti))<-1.5
+                        velmask(cbhi:cthi,ti)=refmask(cbhi:cthi,ti);
+                        velmask(find(~isnan(Z(cbhi:cthi,ti+1)))+cbhi-1,ti:ti+1)=min(min(refmask(cbhi:cthi,ti:ti+1),[],'omitnan'),[],'omitnan');
                     end
                 end
-            end
-        end
-        if min(vel(:,ti))<-1.5
-            vfl=find(vel(:,ti)==min(vel(:,ti)));
-            vl=vfl(1);
-            clear vfl
-            if ~isnan(velmask(vl,ti))
-                %velmask(refmask==refmask(vl,ti))=refmask(refmask==refmask(vl,ti));
-                indexes=find(refmask==refmask(vl,ti));
-                velmask(indexes)=refmask(vl,ti);
             end
         end
         clear ref_nn
     end
+
     %% From Right to Left Propagation
     for ti=maxtlen:-1:1
-        ref_nn=find(~isnan(ref_inst(:,ti)));
+        ref_nn=find(~isnan(Z(:,ti)));
         if ~isempty(ref_nn)
             cbhi=ref_nn(1);
             cthi=0;
-           
-            for nnhi=1:length(ref_nn)
-                if nnhi==length(ref_nn)
-                    cthi=ref_nn(nnhi);
-                elseif ref_nn(nnhi)<ref_nn(nnhi+1)-1
-                    cthi=ref_nn(nnhi);
+            cth=ref_nn(diff(ref_nn>1));
+            if iesempty(cth)
+                cbhi=ref_nn(1);
+                cthi=ref_nn(length(ref_nn));
+                layer=1;
+            else 
+                cbh(1)=ref_nn(1);
+                layeri=1;
+                for layerj=1:length(ref_nn)
+                    if cth(layeri)==ref_nn(layerj)
+                        layeri=layeri+1; 
+                        cbh(layeri)=ref_nn(layerj+1);
+                    end
+                    if layeri >length(cth)
+                        break
+                    end
                 end
-                
+                layer=length(cbh)+1;
+                cth(layer)=ref_nn(length(ref_nn));
+            end
+
+            for layeri=1:layer
+                cbhi=cbh(layeri);
+                cthi=cth(layeri);
                 if cthi>=cbhi
                     if ~isnan(min(refmask(cbhi:cthi,ti)))
                         refmask(cbhi:cthi,ti)=min(refmask(cbhi:cthi,ti));
@@ -133,32 +185,32 @@ for i=1:fn
                             mask_max=max(max(refmask(cbhi:cthi,ti-1:ti),[],'omitnan'),[],'omitnan');
                             while mask_min~=mask_max
                                 refmask(refmask==mask_max)=mask_min;
+                                if layeri==1&&min(vel(cbhi:cthi,ti))<-1.5
+                                    velmask(velmask==mask_max)=mask_min;
+                                end
                                 mask_max=max(max(refmask(cbhi:cthi,ti-1:ti),[],'omitnan'),[],'omitnan');
                             end
                         end
                     end
-                    if  (nnhi)<length(ref_nn)
-                        cbhi=ref_nn(nnhi+1);
-                    end
                 end
-            end
-        end
-        if min(vel(:,ti))<-1.5
-            vfl=find(vel(:,ti)==min(vel(:,ti)));
-            vl=vfl(1);
-            clear vfl
-            if ~isnan(velmask(vl,ti))||velmask(vl,ti)~=refmask(vl,ti)
-                indexes=find(refmask==refmask(vl,ti));
-                velmask(indexes)=refmask(vl,ti);
             end
         end
         clear ref_nn
     end
     fnl=length(fname);
-    fday=str2num(fname(fnl-11:fnl-10));
-    fmonth=str2num(fname(fnl-13:fnl-12));
-    fyear=str2num(fname(fnl-17:fnl-14));
-    fmd=str2num(fname(fnl-13:fnl-10));
+    if isMMCR
+        fday=str2num(fname(fnl-12:fnl-11));
+        fmonth=str2num(fname(fnl-14:fnl-13));
+        fyear=str2num(fname(fnl-18:fnl-15));
+        fmd=str2num(fname(fnl-14:fnl-11));
+        ymd=fname(fnl-18:fnl-11);
+    else
+        fday=str2num(fname(fnl-11:fnl-10));
+        fmonth=str2num(fname(fnl-13:fnl-12));
+        fyear=str2num(fname(fnl-17:fnl-14));
+        fmd=str2num(fname(fnl-13:fnl-10));
+        ymd=fname(fnl-17:fnl-10);
+    end
     [pyr pmn pda]=paday(1,fyear,fmonth,fday);
     if ~isempty(find(~isnan(refmask(:,1))))
         findl=dir([matdir,num2str(pyr),num2str(pmn,'%02d'),num2str(pda,'%02d'),'*mat']);
@@ -186,7 +238,6 @@ for i=1:fn
                             if isfield(prev,'velmask')&&~isnan(prev.velmask(hi,maxtlen))&&isnan(velmask(hi,1))
                                 velmask(refmask==refmask(hi,1))=prev.velmask(hi,maxtlen);
                             elseif isfield(prev,'velmask')&&isnan(prev.velmask(hi,maxtlen))&&~isnan(velmask(hi,1))
-                                p
                                 prev.velmask(refmask==refmask(hi,maxtlen))=velmask(hi,1);
                             end
                         end
@@ -195,8 +246,9 @@ for i=1:fn
             end
             refmask_pres=refmask;
             refmask=prev.refmask;
-            save(pfilen,'refmask','-append');
-            clear refmask;
+            save(pfilen,'refmask','velmask','-append');
+            clear refmask
+            clear velmask
             clear prev 
             clear pfilen
         else
@@ -222,7 +274,7 @@ for i=1:fn
         end
         clear afilen
     end
-    k=1+str2num(fname(fnl-17:fnl-10))*10^(-8);
+    k=1+str2num(ymd)*10^(-8);
 
     for mi=floor(min(min(refmask))):floor(max(max(refmask)))
         if ~isempty(refmask==mi)
@@ -250,8 +302,13 @@ for i=1:fn
             end
         end
     end
-    disp(strcat('outfile:',matdir,'/day_',fname(fnl-17:fnl-10)))
-    save(strcat(matdir,'/day_',fname(fnl-17:fnl-10)),'t','h','nanmask','ref','refmask','ldr','vel','velmask','nanlength')
+    disp(strcat('outfile:',matdir,'/day_',ymd))
+    if isMMCR
+        save(strcat(matdir,'/MMCR_day_',ymd,'t','h','validmask','ref','refmask','ldr','vel','velmask','nanlength')
+    else
+        save(strcat(matdir,'/day_',ymd,'t','h','validmask','ref','refmask','ldr','vel','velmask','nanlength')
+    end
+
 clear ref* *mask nanlength nanstart
 end
 catch
@@ -259,7 +316,7 @@ catch
 end    
 end
 %clear r* f* m*  t* h* n* 
-rainmask_KAZR
+rainmask
 %echovelmask;
 %h=[15:15:15000];
 %t=[120:120:86400]/3600;

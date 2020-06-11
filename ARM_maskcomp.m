@@ -1,7 +1,11 @@
 site=siteo{1}
 matdir=['./out/mat/' site '/'];
 datadir=['~/CR_work/ARM/DATA/' site '/'];
-flo=dir([matdir 'day*.mat']);
+if isMMCR
+    flo=dir([matdir 'MMCR*.mat']);
+else
+    flo=dir([matdir 'day*.mat']);
+end
 j=1;
 for i=1:length(flo)
     if flo(i).bytes>10000
@@ -239,22 +243,26 @@ try
 Figure_make
 catch
 end
-
+if isMMCR
+    radartype='MMCR';
+else
+    radartype = 'KAZR';
+end
 
         if ri==1
-            save(['KAZR' 'norain' site],'out','refmask*');
+            save([radartype 'norain' site],'out','refmask*');
         elseif ri==2
-            save(['KAZR' 'rain' site],'out','refmask*');
+            save([radartype 'rain' site],'out','refmask*');
         elseif ri==3
-            save(['KAZR' 'raincol' site],'out','refmask*');
+            save([radartype 'raincol' site],'out','refmask*');
         elseif ri==4
-            save(['KAZR' 'noraincol' site],'out','refmask*');
+            save([radartype 'noraincol' site],'out','refmask*');
         elseif ri==5
-            save(['KAZR' 'raincell' site],'out','refmask*');
+            save([radartype 'raincell' site],'out','refmask*');
         elseif ri==6
-            save(['KAZR' 'norainsys' site],'out','refmask*');
+            save([radartype 'norainsys' site],'out','refmask*');
         elseif ri==7
-            save(['KAZR' 'rainsys' site],'out','refmask*');
+            save([radartype 'rainsys' site],'out','refmask*');
         end
     else
       
@@ -271,19 +279,19 @@ end
         refmaskTOTLST_24(:,26)=refmaskTOTLST_24(:,2);
 
         if ri==1
-            save(['KAZR' 'norain' site],'out','refmask*');
+            save([radartype 'norain' site],'out','refmask*');
         elseif ri==2
-            save(['KAZR' 'rain' site],'out','refmask*');
+            save([radartype 'rain' site],'out','refmask*');
         elseif ri==3
-            save(['KAZR' 'raincol' site],'out','refmask*');
+            save([radartype 'raincol' site],'out','refmask*');
         elseif ri==4
-            save(['KAZR' 'noraincol' site],'out','refmask*');
+            save([radartype 'noraincol' site],'out','refmask*');
         elseif ri==5
-            save(['KAZR' 'raincell' site],'out','refmask*');
+            save([radartype 'raincell' site],'out','refmask*');
         elseif ri==6
-            save(['KAZR' 'norainsys' site],'out','refmask*');
+            save([radartype 'norainsys' site],'out','refmask*');
         elseif ri==7
-            save(['KAZR' 'rainsys' site],'out','refmask*');
+            save([radartype 'rainsys' site],'out','refmask*');
         end
     end
 end

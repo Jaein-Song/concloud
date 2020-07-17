@@ -1,4 +1,6 @@
 #Ignores
 *.log
+nohup.out
+logs/*
 *.mat
 out/

@@ -46,14 +46,13 @@ nanthres=10;
 ldrthres=-10.5;
 
 mdiv=4;
-if mdiv==1
-    mlist=[1:1:12];
-end
-for ri=1:7
+for ri=1:5
 ref1mask=zeros(nh,nt);
 ref2mask=zeros(nh,nt);
     for mi=1:mdiv
-        if mdiv==4&&mi==1
+        if mdiv==1
+            mlist=[1:1:12];
+        elseif mdiv==4&&mi==1
             mlist=[12 1 2];
         elseif mdiv==4&&mi==2
             mlist=[3 4 5];
@@ -73,48 +72,39 @@ ref2mask=zeros(nh,nt);
             m=str2num(ymd(5:6));
             d=str2num(ymd(7:8));
             if(max(m==mlist))
-                load(matfname,'ref');
-                ref2inst=ref;
-                clear ref;
-                
+                load(matfname,'velmask');
+                load(matfname,'refmask');
+                load(matfname,'rainmask');
+                load(matfname,'validmask');
                 if  ri==1
-                    load(matfname,'rainmask')
-                    ref2mask(rainmask==0)=ref2mask(rainmask==0)+1;
-                    clear rainmask
+                    loc = ~isnan(refmask);
+                    clear velmask refmask rainmask 
                 elseif ri==2
-                    ref2mask(~isnan(ref2inst))=ref2mask(~isnan(ref2inst))+1;
+                    loc=~isnan(velmask);
+                    clear refmask velmask
                 elseif ri==3
-                    load(matfname,'rainflag')
-                    for ti=1:nt
-                        if rainflag(ti)==1
-                            ref2mask(~isnan(ref2inst(:,ti)),ti)=ref2mask(~isnan(ref2inst(:,ti)),ti)+1;
+                    loc = ~isnan(refmask)&isnan(velmask);
+                    clear refmask velmask rainmask
+                elseif ri == 4
+                    loc = zeros(nh,nt);
+                    for ti = 1:length(rainloc);
+                        if rainmask(1,ti)==1
+                            loc(:,ti) = ~isnan(refmask(:,ti));
                         end
                     end
-                    clear rainflag
-                elseif ri==4
-                    load(matfname,'rainflag')
-                    for ti=1:nt
-                        if rainflag(ti)~=1
-                            ref2mask(~isnan(ref2inst(:,ti)),ti)=ref2mask(~isnan(ref2inst(:,ti)),ti)+1;
+                    clear refmask rainmask velmask
+                elseif ri == 5
+                    loc = zeros(nh,nt);
+                    for ti = 1:length(rainloc);
+                        if rainmask(1,ti)==0
+                            loc(:,ti) = ~isnan(refmask(:,ti));
                         end
                     end
-                    clear rainflag
-                elseif ri==5
-                    load(matfname,'rainmask')
-                    ref2mask(rainmask==1)=ref2mask(rainmask==1)+1;
-                    clear rainmask
-                elseif ri==6
-                    load(matfname,'velmask')
-                    ref2mask(velmask==0)=ref2mask(velmask==0)+1;
-                    clear refmask velmask
-                elseif ri==7
-                    load(matfname,'velmask')
-                    ref2mask(velmask==1)=ref2mask(velmask==1)+1;
-                    clear refmask velmask
+                    clear refmask rainmask velmask
                 end
-                load(matfname,'nanmask')
-                nums(1:nh,nanmask>10)=nums(1:nh,nanmask>10)+1;
-             clear *inst *1m nanmask
+                ref2mask(loc)=ref2mask(loc)+1;
+                nums(1:nh,validmask>0)=nums(1:nh,validmask>0)+1;
+             clear *inst *1m validmask 
             end
         end
         ref2mask=ref2mask./nums;
@@ -190,26 +180,20 @@ ref2mask=zeros(nh,nt);
             contourline=2;
 
             if ri==1
-                prefix_filename{1}='hourly_norain';
-                prefix_filename{2}='2min_norain';
+                prefix_filename{1}='hourly_total';
+                prefix_filename{2}='2min_total';
             elseif ri==2
-                prefix_filename{1}='hourly_rain';
-                prefix_filename{2}='2min_rain';
-            elseif ri==3
-                prefix_filename{1}='hourly_rain_col';
-                prefix_filename{2}='2min_rain_col';
-            elseif ri==4
-                prefix_filename{1}='hourly_norain_col';
-                prefix_filename{2}='2min_norain_col';
-            elseif ri==5
-                prefix_filename{1}='hourly_raincell';
-                prefix_filename{2}='2min_raincell';
-            elseif ri==6
-                prefix_filename{1}='hourly_norainsys';
-                prefix_filename{2}='2min_norainsys';
-            elseif ri==7
                 prefix_filename{1}='hourly_rainsys';
                 prefix_filename{2}='2min_rainsys';
+            elseif ri==3
+                prefix_filename{1}='hourly_clear';
+                prefix_filename{2}='2min_clear';
+            elseif ri==4
+                prefix_filename{1}='hourly_clear';
+                prefix_filename{2}='2min_clear';
+            elseif ri==5
+                prefix_filename{1}='hourly_clear';
+                prefix_filename{2}='2min_clear';
             end
             for oi=1:2
                 out{oi,1}.name='MAM';
@@ -238,35 +222,24 @@ ref2mask=zeros(nh,nt);
                     out{oi,oj}.ctl=[10 10; 1 1];
                 end
             end
-%% CALL PLOTTING FUCTION 
-try
-Figure_make
-catch
-end
-if isMMCR
-    radartype='MMCR';
-else
-    radartype = 'KAZR';
-end
+        if isMMCR
+            radartype='MMCR';
+        else
+            radartype = 'KAZR';
+        end
 
         if ri==1
-            save([radartype 'norain' site],'out','refmask*');
+            save([radartype 'total' site],'out','refmask*');
         elseif ri==2
-            save([radartype 'rain' site],'out','refmask*');
-        elseif ri==3
-            save([radartype 'raincol' site],'out','refmask*');
-        elseif ri==4
-            save([radartype 'noraincol' site],'out','refmask*');
-        elseif ri==5
-            save([radartype 'raincell' site],'out','refmask*');
-        elseif ri==6
-            save([radartype 'norainsys' site],'out','refmask*');
-        elseif ri==7
             save([radartype 'rainsys' site],'out','refmask*');
+        elseif ri==3
+            save([radartype 'clear' site],'out','refmask*');
+        elseif ri==4
+            save([radartype 'raincol' site],'out','refmask*');
+        elseif ri==5
+            save([radartype 'clearcol' site],'out','refmask*');
         end
     else
-      
-        
         for i=1:24
             for hi=1:length(h24)
                 data=refmaskTOTLST;
@@ -279,70 +252,15 @@ end
         refmaskTOTLST_24(:,26)=refmaskTOTLST_24(:,2);
 
         if ri==1
-            save([radartype 'norain' site],'out','refmask*');
+            save([radartype 'total' site],'out','refmask*');
         elseif ri==2
-            save([radartype 'rain' site],'out','refmask*');
-        elseif ri==3
-            save([radartype 'raincol' site],'out','refmask*');
-        elseif ri==4
-            save([radartype 'noraincol' site],'out','refmask*');
-        elseif ri==5
-            save([radartype 'raincell' site],'out','refmask*');
-        elseif ri==6
-            save([radartype 'norainsys' site],'out','refmask*');
-        elseif ri==7
             save([radartype 'rainsys' site],'out','refmask*');
+        elseif ri==3
+            save([radartype 'clear' site],'out','refmask*');
+        elseif ri==4
+            save([radartype 'raincol' site],'out','refmask*');
+        elseif ri==5
+            save([radartype 'clearcol' site],'out','refmask*');
         end
     end
 end
-
-%     subplot(2,2,1);contourf(t,h,refmaskMAMLST,'linestyle','none');set(gca,'CLim',[0 0.25]);colorbar
-%     subplot(2,2,2);contourf(t,h,refmaskJJALST,'linestyle','none');set(gca,'CLim',[0 0.25]);colorbar
-%     subplot(2,2,3);contourf(t,h,refmaskSONLST,'linestyle','none');set(gca,'CLim',[0 0.25]);colorbar
-%     subplot(2,2,4);contourf(t,h,refmaskDJFLST,'linestyle','none');set(gca,'CLim',[0 0.25]);colorbar    
-% subplot(2,2,1);pcolor(t24,h24,refmaskMAMLST_24);shading flat;set(gca,'CLim',[0 0.2]);colorbar
-%     set(gca,'CLim',[0 0.2],'FontSize',14,'FontWeight','bold','XTick',...
-%     [0 2 4 6 8 10 12 14 16 18 20 22 24],'YTick',[0 3000 6000 9000 12000 15000],'xlim',[0 24],'ylim',[0 15000]);
-%     title('MAM','FontWeight','bold','FontSize',16);
-% subplot(2,2,2);pcolor(t24,h24,refmaskJJALST_24);shading flat;set(gca,'CLim',[0 0.25]);colorbar
-%     set(gca,'CLim',[0 0.2],'FontSize',14,'FontWeight','bold','XTick',...
-%     [0 2 4 6 8 10 12 14 16 18 20 22 24],'YTick',[0 3000 6000 9000 12000 15000],'xlim',[0 24],'ylim',[0 15000]);
-%     title('JJA','FontWeight','bold','FontSize',16);
-% subplot(2,2,3);pcolor(t24,h24,refmaskSONLST_24);shading flat;set(gca,'CLim',[0 0.25]);colorbar
-%     set(gca,'CLim',[0 0.2],'FontSize',14,'FontWeight','bold','XTick',...
-%     [0 2 4 6 8 10 12 14 16 18 20 22 24],'YTick',[0 3000 6000 9000 12000 15000],'xlim',[0 24],'ylim',[0 15000]);
-%     title('SON','FontWeight','bold','FontSize',16);
-% subplot(2,2,4);pcolor(t24,h24,refmaskDJFLST_24);shading flat;set(gca,'CLim',[0 0.25]);colorbar    
-%     set(gca,'CLim',[0 0.2],'FontSize',14,'FontWeight','bold','XTick',...
-%     [0 2 4 6 8 10 12 14 16 18 20 22 24],'YTick',[0 3000 6000 9000 12000 15000],'xlim',[0 24],'ylim',[0 15000]);
-%     title('DJF','FontWeight','bold','FontSize',16);
-% 
-% subplot(2,2,1);pcolor(t,h,refmaskMAMLST);shading flat;set(gca,'CLim',[0 0.25]);colorbar
-%     set(gca,'CLim',[0 0.15],'FontSize',14,'FontWeight','bold','XTick',...
-%     [0 2 4 6 8 10 12 14 16 18 20 22 24],'YTick',[0 3000 6000 9000 12000 15000],'xlim',[0 24],'ylim',[0 15000]);
-%     title('MAM','FontWeight','bold','FontSize',16);
-%     subplot(2,2,2);pcolor(t,h,refmaskJJALST);shading flat;set(gca,'CLim',[0 0.25]);colorbar
-%     set(gca,'CLim',[0 0.15],'FontSize',14,'FontWeight','bold','XTick',...
-%     [0 2 4 6 8 10 12 14 16 18 20 22 24],'YTick',[0 3000 6000 9000 12000 15000],'xlim',[0 24],'ylim',[0 15000]);
-%     title('JJA','FontWeight','bold','FontSize',16);
-% subplot(2,2,3);pcolor(t,h,refmaskSONLST);shading flat;set(gca,'CLim',[0 0.25]);colorbar
-%     set(gca,'CLim',[0 0.15],'FontSize',14,'FontWeight','bold','XTick',...
-%     [0 2 4 6 8 10 12 14 16 18 20 22 24],'YTick',[0 3000 6000 9000 12000 15000],'xlim',[0 24],'ylim',[0 15000]);
-%     title('SON','FontWeight','bold','FontSize',16);
-% subplot(2,2,4);pcolor(t,h,refmaskDJFLST);shading flat;set(gca,'CLim',[0 0.25]);colorbar   
-%     set(gca,'CLim',[0 0.15],'FontSize',14,'FontWeight','bold','XTick',...
-%     [0 2 4 6 8 10 12 14 16 18 20 22 24],'YTick',[0 3000 6000 9000 12000 15000],'xlim',[0 24],'ylim',[0 15000]);
-%     title('DJF','FontWeight','bold','FontSize',16);
-%  
-% else
-%     for i=1:24
-%         for hi=1:50
-%             data=refmaskTOTLST;
-%             instmat=data((hi-1)*20+1:hi*20,(i-1)*30+1:i*30);
-%             refmaskTOTLST_24(hi,i)=mean(instmat(~isnan(instmat)));
-%         end
-%     end
-%     refmaskTOTLST_24(:,1)=refmaskTOTLST_24(:,25);
-%     refmaskTOTLST_24(:,26)=refmaskTOTLST_24(:,2);
-%     pcolor(t24,h24,refmaskTOTLST_24);shading flat;set(gca,'Clim',[0 0.25]);colorbar
-% end

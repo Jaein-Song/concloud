@@ -9,7 +9,8 @@ while [ $i -lt $sitenum ]; do
     logfile=KAZR_${sites[$i]}.log
     echo $logfile 
     errmsg="\"Error occurred: site = ${sites[$i]}\""
-    cmdline="siteo=$site;isMMCR=0;try;ARM_mask;catch;end;exit"
+    cmdline="siteo=$site;isMMCR=0;ARM_mask;exit"
+    #cmdline="siteo=$site;isMMCR=0;try;ARM_rainmask;catch;end;exit"
     #cmdline="siteo=$site;try;rainmask_KAZR;catch;end;exit"
    echo $cmdline 
     nohup matlab -r $cmdline -nodesktop -nosplash -nojvm -logfile $logfile  & 
@@ -26,6 +27,7 @@ while [ $i -lt $sitenum ]; do
     echo $logfile 
     errmsg="\"Error occurred: site = ${sites[$i]}\""
     cmdline="siteo=$site;isMMCR=1;try;ARM_mask;catch;end;exit"
+    #cmdline="siteo=$site;isMMCR=1;try;ARM_rainmask;catch;end;exit"
     #cmdline="siteo=$site;try;rainmask_KAZR;catch;end;exit"
    echo $cmdline 
     nohup matlab -r $cmdline -nodesktop -nosplash -nojvm -logfile $logfile & 

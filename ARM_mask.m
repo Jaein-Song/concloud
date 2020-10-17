@@ -31,13 +31,14 @@ fn=length(fl);
 j=0;
 nanthres=10;
 k=1;
-for i=4:fn
+for i=1:fn
     %%INITIALIZE
     %% Get vars
     fname=strcat(radar.datadir{radarindex} ,fl(i,:))
     try
         t=ncread(fname,radar.tname{radarindex});
         h=ncread(fname,radar.hname{radarindex});
+        hi = 1
         while h(hi)<300
             hi=hi+1;
         end
@@ -226,7 +227,7 @@ for i=4:fn
                 ymd=fname(fnl-17:fnl-10);
             end
             [pyr pmn pda]=paday(1,fyear,fmonth,fday);
-            if ~isempty(find(~isnan(refmask(:,1),1)))
+            if ~isempty(find(~isnan(refmask(:,1))))
                 findl=dir([matdir,'*',num2str(pyr),num2str(pmn,'%02d'),num2str(pda,'%02d'),'*mat']);
                 if ~isempty(findl)
                     pfname=findl.name;
@@ -272,25 +273,26 @@ for i=4:fn
                     clear prev 
                     clear pfilen
                 else
-        %            for hi=1:maxhlen
-        %                mask=refmask(hi,1);
-        %                refmask(refmask==mask)=NaN;
-        %            end
+                    for hi=1:maxhlen
+                        mask=refmask(hi,1);
+                        refmask(refmask==mask)=NaN;
+                        velmask(velmask==mask)=NaN;
+                    end
                 end
                 
             end
-            if ~isempty(find(~isnan(refmask(:,maxtlen),1)))
+            if ~isempty(find(~isnan(refmask(:,maxtlen))))
             [ayr amn ada]=paday(0,fyear,fmonth,fday);
                 findl=dir([radar.datadir{radarindex},'*',num2str(ayr),num2str(amn,'%02d'),num2str(ada,'%02d'),'*nc']);
                 afilen=[radar.datadir{radarindex} findl.name]
                 clear findl
-        %        if isempty(afilen)
-        %            for hi=1:maxhlen
-        %                mask=refmask(hi,maxtlen);
-        %                refmask(refmask==mask)=NaN;
-        %                velmask(velmask==mask)=NaN;
-        %            end
-        %        end
+                if isempty(afilen)
+                    for hi=1:maxhlen
+                        mask=refmask(hi,maxtlen);
+                        refmask(refmask==mask)=NaN;
+                        velmask(velmask==mask)=NaN;
+                    end
+                end
                 clear afilen
             end
             k=1+str2num(ymd)*10^(-8);

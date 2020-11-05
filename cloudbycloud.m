@@ -1,5 +1,4 @@
 
-clear
 
 site=siteo{1}
 fdir=['./out/mat/' site '/'];
@@ -13,27 +12,28 @@ for fi =  1 : length(flist)
     try
         fname = [flist(fi).name]
         load([flist(fi).folder '/'  fname],'refmask');
-        load([flist(fi).folder '/'  fname],'BB_height');
+        %load([flist(fi).folder '/'  fname],'BB_height');
         refSize = size(refmask);
         tLen = refSize(2);
         hLen = refSize(1);
-        ymd = fname(9:16);
+        ymd = fname(5:12)
         minRefMask = min(min(refmask));
     %     maxRefMask = max(max(refmask));     
         if ~isnan(minRefMask) 
             refMasks = refmask;
             refMasks(refMasks ~= minRefMask) = NaN;
-            refMaskLength = length(refMasks);
+            refMaskLength = length(find(refMasks==minRefMask));
+            %refMaskLength = length(refMasks);
             while refMaskLength>0
                 cloudTopIndex = 0;
-                cloudBaseIndex = 1000;
+                cloudBaseIndex = hLen;
                 cloudTopPrev = 0;
                 startIndex = 0;
                 endIndex = 0;
                 cloudTop = 0;
                 cloudBase = 0;
                 precip = 0;
-                BBPresence = 0;
+                %BBPresence = 0;
                 for ti = 1 : tLen
                     hi = hLen;
                     while isnan(refMasks(hi,ti)) && hi>1
@@ -49,20 +49,20 @@ for fi =  1 : length(flist)
                     end
                     cloudTopPrev = hi;
                     hi = 1;
-                    while isnan(refMasks(hi,ti)) && hi < 1000
+                    while isnan(refMasks(hi,ti)) && hi < hLen 
                         hi = hi + 1;
                     end
                     if hi <= 20 
                         precip = 1;
                     end
-                    if BBPresence == 0 && BB_height(ti)/hIntv >=hi && BB_height(ti)/hIntv <= cloudTopPrev
-                        BBPresence =1;
-                    end
-                    if cloudBaseIndex > hi && hi > 20 && hi <1000
+                 %   if BBPresence == 0 && BB_height(ti)/hIntv >=hi && BB_height(ti)/hIntv <= cloudTopPrev
+                  %      BBPresence =1;
+                   % end
+                    if cloudBaseIndex > hi && hi > 20 && hi < hLen
                         cloudBaseIndex = hi;
                     end
                 end
-                if cloudBaseIndex ==1000
+                if cloudBaseIndex == hLen
                     cloudBaseIndex = 20;
                 end
                 if endIndex == 0 
@@ -79,13 +79,13 @@ for fi =  1 : length(flist)
                 end
                 if list2Index > 1 && listIndex ~= maxhits(list2Index - 1,1) && ~isempty(find(maxhits(:,2)==minRefMask))
                     index = maxhits(find(maxhits(:,2)==minRefMask,1),1);
-                    statistics(index,12) = max(statistics(index,12),BBPresence);
+                  %  statistics(index,12) = max(statistics(index,12),BBPresence);
                     statistics(index,11) = max(statistics(index,11),precip);
                     statistics(index,10)=statistics(index,10)+endIndex;
                     statistics(index,8) = min(statistics(index,9),cloudBaseIndex);
                     statistics(index,7) = max(statistics(index,8),cloudTopIndex);
                 else
-                    statistics(listIndex,:) = [str2num(ymd),minRefMask,floor(minRefMask),maskYY, maskMM, maskDD , cloudTopIndex, cloudBaseIndex, startIndex, endIndex, precip, BBPresence];
+                    statistics(listIndex,:) = [str2num(ymd),minRefMask,floor(minRefMask),maskYY, maskMM, maskDD , cloudTopIndex, cloudBaseIndex, startIndex, endIndex, precip];%, BBPresence];
                     listIndex = listIndex +1 ;
                 end
 
@@ -96,7 +96,8 @@ for fi =  1 : length(flist)
                 end
                 refMasks = refmask;
                 refMasks(refMasks ~= minRefMask) = NaN;
-                refMaskLength = length(refMasks);
+                %refMaskLength = length(refMasks);
+                refMaskLength = length(find(refMasks==minRefMask));
             end
         end
     catch

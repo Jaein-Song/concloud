@@ -64,7 +64,9 @@ for i=1:fn
         if maxtlen==radar.tlen(radarindex)&&maxhlen==radar.hlen(radarindex)
             mask_initialize
             mask_concloud
+            mask_timegap
             mask_paday
+            mask_rain
             %% Masking renumber
             k=1+str2num(ymd)*10^(-8);
             for mi=floor(min(min(refmask))):floor(max(max(refmask)))

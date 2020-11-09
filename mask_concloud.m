@@ -2,6 +2,7 @@
 for ti=1:maxtlen
     ref_nn=find(~isnan(ref(:,ti)));
     if ~isempty(ref_nn)&&length(ref_nn)<maxhlen
+    %%Find Cloud Top and Bottom
         cbhi=ref_nn(1);
         cthi=0;
         cth=ref_nn(diff(ref_nn)>1);
@@ -28,7 +29,7 @@ for ti=1:maxtlen
         for layeri=1:layer
             cbhi=cbh(layeri);
             cthi=cth(layeri);
-            if cthi>=cbhi||length(ref_nn)<maxhlen
+            if cthi>cbhi||length(ref_nn)<maxhlen
                 if isnan(min(refmask(cbhi:cthi,ti)))
                     refmask(cbhi:cthi,ti)=k;
                     if ti <maxtlen
@@ -41,11 +42,11 @@ for ti=1:maxtlen
                         refmask(find(~isnan(ref(cbhi:cthi,ti+1)))+cbhi-1,ti:ti+1)=min(min(refmask(cbhi:cthi,ti:ti+1),[],'omitnan'),[],'omitnan');
                     end
                 end
-                veltestrange=min(cthi,m300);
-                if layeri==1&&ref(m300,ti)>-15&&cbhi>veltestrange&&min(vel(cbhi:veltestrange,ti))<-1.5&&ti<maxtlen
-                    velmask(cbhi:cthi,ti)=refmask(cbhi:cthi,ti);
-                    velmask(find(~isnan(ref(cbhi:cthi,ti+1)))+cbhi-1,ti:ti+1)=min(min(refmask(cbhi:cthi,ti:ti+1),[],'omitnan'),[],'omitnan');
-                end
+                % veltestrange=min(cthi,m300);
+                % if layeri==1&&ref(m300,ti)>-15&&cbhi<=veltestrange&&min(vel(cbhi:veltestrange,ti))<-1.5&&ti<maxtlen
+                %     velmask(cbhi:cthi,ti)=refmask(cbhi:cthi,ti);
+                %     velmask(find(~isnan(ref(cbhi:cthi,ti+1)))+cbhi-1,ti:ti+1)=min(min(refmask(cbhi:cthi,ti:ti+1),[],'omitnan'),[],'omitnan');
+                % end
             end
         end
     end
@@ -83,21 +84,17 @@ for ti=maxtlen:-1:1
         for layeri=1:layer
             cbhi=cbh(layeri);
             cthi=cth(layeri);
-            if cthi>=cbhi
-                if ~isnan(min(refmask(cbhi:cthi,ti)))
-                    refmask(cbhi:cthi,ti)=min(refmask(cbhi:cthi,ti));
-                    if ti >1
-                        mask_min=min(min(refmask(cbhi:cthi,ti-1:ti),[],'omitnan'),[],'omitnan');
-                        mask_max=max(max(refmask(cbhi:cthi,ti-1:ti),[],'omitnan'),[],'omitnan');
-                        while mask_min~=mask_max
-                            refmask(refmask==mask_max)=mask_min;
-                            veltestrange=min(cthi,m300);
-                            if layeri==1&&ref(m300,ti)>-15&&cbhi>veltestrange&&min(vel(cbhi:veltestrange,ti))<-1.5&&ti>1n
-                                velmask(velmask==mask_max)=mask_min;
-                            end
-                            mask_max=max(max(refmask(cbhi:cthi,ti-1:ti),[],'omitnan'),[],'omitnan');
-                        end
-                    end
+            if cthi>cbhi&&~isnan(min(refmask(cbhi:cthi,ti)))&&ti >1
+                refmask(cbhi:cthi,ti)=min(refmask(cbhi:cthi,ti));
+                mask_min=min(min(refmask(cbhi:cthi,ti-1:ti),[],'omitnan'),[],'omitnan');
+                mask_max=max(max(refmask(cbhi:cthi,ti-1:ti),[],'omitnan'),[],'omitnan');
+                while mask_min~=mask_max
+                    refmask(refmask==mask_max)=mask_min;
+                    % veltestrange=min(cthi,m300);
+                    % if layeri==1&&ref(m300,ti)>-15&&cbhi<=veltestrange&&min(vel(cbhi:veltestrange,ti))<-1.5&&ti>1n
+                    %     velmask(velmask==mask_max)=mask_min;
+                    % end
+                    % mask_max=max(max(refmask(cbhi:cthi,ti-1:ti),[],'omitnan'),[],'omitnan');
                 end
             end
         end

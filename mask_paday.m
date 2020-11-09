@@ -49,6 +49,7 @@ if ~isempty(find(~isnan(refmask(:,1))))
             mask=refmask(hi,1);
             refmask(refmask==mask)=NaN;
             velmask(velmask==mask)=NaN;
+            validmask(refmask==mask)=0;
         end
     end
     
@@ -63,6 +64,7 @@ if ~isempty(find(~isnan(refmask(:,maxtlen))))
             mask=refmask(hi,maxtlen);
             refmask(refmask==mask)=NaN;
             velmask(velmask==mask)=NaN;
+            validmask(refmask==mask)=0;
         end
     end
     clear afilen

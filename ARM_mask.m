@@ -112,9 +112,9 @@ for i=1:fn
         disp(['error' fl(i,:)])
     end    
 end
-%ARM_maskcomp
+ARM_maskcomp
 %clear r* f* m*  t* h* n* 
-ARM_rainmask
+% ARM_rainmask
 %echovelmask;
 %h=[15:15:15000];
 %t=[120:120:86400]/3600;

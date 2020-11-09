@@ -20,7 +20,7 @@ for i=1:fn
     load(matfname,'refmask');
     load(matfname,'rainmask');
     load(matfname,'validmask');
-    for ri=1:5
+    for ri=1:3
         if  ri==1
             loc = ~isnan(refmask);
             clear velmask refmask rainmask 
@@ -53,7 +53,7 @@ for i=1:fn
     end
 end
 
-for ri = 1:5
+for ri = 1:3
     r{ri}.ref2mask=r{ri}.ref2mask./nums;
 
     if mdiv==1

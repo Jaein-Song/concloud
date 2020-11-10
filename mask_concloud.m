@@ -94,7 +94,7 @@ for ti=maxtlen:-1:1
                     % if layeri==1&&ref(m300,ti)>-15&&cbhi<=veltestrange&&min(vel(cbhi:veltestrange,ti))<-1.5&&ti>1n
                     %     velmask(velmask==mask_max)=mask_min;
                     % end
-                    % mask_max=max(max(refmask(cbhi:cthi,ti-1:ti),[],'omitnan'),[],'omitnan');
+                     mask_max=max(max(refmask(cbhi:cthi,ti-1:ti),[],'omitnan'),[],'omitnan');
                 end
             end
         end

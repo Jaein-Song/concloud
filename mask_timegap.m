@@ -16,7 +16,7 @@ for hi = 1 : maxhlen
             for tj = 1 : tRightEnd
                 minRefMask = min(refmask(hi,ti+1:tRightEnd))
                 if refmask(hi,tj) ~= minRefMask
-                    refmask(refmask=refmask(hi,tj))=minRefMask
+                    refmask(refmask==refmask(hi,tj))=minRefMask
                 end
             end
         end

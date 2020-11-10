@@ -49,7 +49,7 @@ for i=1:fn
         fmd=str2num(fname(fnl-13:fnl-10));
         ymd=fname(fnl-17:fnl-10);
     end
-    try
+    %try
         t=ncread(fname,radar.tname{radarindex});
         h=ncread(fname,radar.hname{radarindex});
         hi = 1
@@ -108,9 +108,9 @@ for i=1:fn
 
             clear ref* *mask nanlength nanstart
         end
-    catch
-        disp(['error' fl(i,:)])
-    end    
+    %catch
+    %    disp(['error' fl(i,:)])
+    %end    
 end
 ARM_maskcomp
 %clear r* f* m*  t* h* n* 

@@ -52,7 +52,7 @@ for i=1:fn
     try
         t=ncread(fname,radar.tname{radarindex});
         h=ncread(fname,radar.hname{radarindex});
-        hi = 1
+        hi = 1;
         while h(hi)<300
             hi=hi+1;
         end

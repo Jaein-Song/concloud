@@ -15,21 +15,19 @@ for i=1:fn
             mi = mfi
         end
     end 
-    r{ri}.ref2mask=zeros(nh,nt);
     load(matfname,'velmask');
     load(matfname,'refmask');
-    load(matfname,'rainmask');
+    load(matfname,'velmask');
+%    load(matfname,'rainmask');
     load(matfname,'validmask');
     for ri=1:3
+        r{ri}.ref2mask=zeros(nh,nt);
         if  ri==1
             loc = ~isnan(refmask);
-            clear velmask refmask rainmask 
         elseif ri==2
             loc=~isnan(velmask);
-            clear refmask velmask
         elseif ri==3
             loc = ~isnan(refmask)&isnan(velmask);
-            clear refmask velmask rainmask
         elseif ri == 4
             loc = zeros(nh,nt);
             for ti = 1:length(rainloc)
@@ -37,7 +35,6 @@ for i=1:fn
                     loc(:,ti) = ~isnan(refmask(:,ti));
                 end
             end
-            clear refmask rainmask velmask
         elseif ri == 5
             loc = zeros(nh,nt);
             for ti = 1:length(rainloc);
@@ -45,12 +42,12 @@ for i=1:fn
                     loc(:,ti) = ~isnan(refmask(:,ti));
                 end
             end
-            clear refmask rainmask velmask
         end
         r{ri}.ref2mask(loc)=r{ri}.ref2mask(loc)+1;
         nums(1:nh,validmask>0)=nums(1:nh,validmask>0)+1;
-        clear *inst *1m validmask 
+        clear *inst *1m 
     end
+    clear refmask velmask validmask
 end
 
 for ri = 1:3

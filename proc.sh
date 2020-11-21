@@ -9,7 +9,7 @@ while [ $i -lt $sitenum ]; do
     logfile=KAZR_${sites[$i]}v2.log
     echo $logfile 
     errmsg="\"Error occurred: site = ${sites[$i]}\""
-    cmdline="siteo=$site;isMMCR=0;ARM_mask;exit"
+    cmdline="siteo=$site;isMMCR=0;ARM_maskcomp;exit"
     #cmdline="siteo=$site;isMMCR=0;try;ARM_rainmask;catch;end;exit"
     #cmdline="siteo=$site;try;rainmask_KAZR;catch;end;exit"
    echo $cmdline 

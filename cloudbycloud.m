@@ -1,7 +1,6 @@
-
-
 site=siteo{1}
 fdir=['./out/mat/' site '/'];
+BBdir = ['/home/jaein/CR_work/ARM/mat/' site '/'];
 % fdir = './matfiles';
 flist = dir([fdir '/day*.mat']);
 listIndex = 1;
@@ -12,11 +11,16 @@ for fi =  1 : length(flist)
     try
         fname = [flist(fi).name]
         load([flist(fi).folder '/'  fname],'refmask');
-        %load([flist(fi).folder '/'  fname],'BB_height');
         refSize = size(refmask);
         tLen = refSize(2);
         hLen = refSize(1);
         ymd = fname(5:12)
+        try
+            load([flist(fi).folder '/'  ymd '.mat'],'BB_height');
+            BBflag = 1;
+        catch
+            BBflag = 0;
+        end
         minRefMask = min(min(refmask));
     %     maxRefMask = max(max(refmask));     
         if ~isnan(minRefMask) 
@@ -33,7 +37,11 @@ for fi =  1 : length(flist)
                 cloudTop = 0;
                 cloudBase = 0;
                 precip = 0;
-                %BBPresence = 0;
+                if BBflag
+                    BBPresence = 0;
+                else
+                    BBPresence = NaN;
+                end
                 for ti = 1 : tLen
                     hi = hLen;
                     while isnan(refMasks(hi,ti)) && hi>1
@@ -55,9 +63,9 @@ for fi =  1 : length(flist)
                     if hi <= 20 
                         precip = 1;
                     end
-                 %   if BBPresence == 0 && BB_height(ti)/hIntv >=hi && BB_height(ti)/hIntv <= cloudTopPrev
-                  %      BBPresence =1;
-                   % end
+                    if BBflag && BBPresence == 0 && BB_height(ti)/hIntv >=hi && BB_height(ti)/hIntv <= cloudTopPrev
+                        BBPresence =1;
+                    end
                     if cloudBaseIndex > hi && hi > 20 && hi < hLen
                         cloudBaseIndex = hi;
                     end

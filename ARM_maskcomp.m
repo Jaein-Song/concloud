@@ -3,6 +3,12 @@
 mdiv=4;
 comp_initialize
 nums=zeros(nh,nt);
+for ri = 1:3
+    for mi = 1:mdiv
+        r{ri,mi}.nums=zeros(nh,nt);
+        r{ri,mi}.ref2mask=zeros(nh,nt);
+    end
+end
 for i=1:fn
     matfname=strcat([matdir fl(i,:)]);
     mfnl=length(matfname);
@@ -21,7 +27,6 @@ for i=1:fn
 %    load(matfname,'rainmask');
     load(matfname,'validmask');
     for ri=1:3
-        r{ri,mi}.ref2mask=zeros(nh,nt);
         if  ri==1
             loc = ~isnan(refmask);
         elseif ri==2
@@ -56,46 +61,51 @@ for mi = 1:mdiv
 
         if mdiv==1
             refmaskTOT=r{ri,mi}.ref2mask;
-            refmaskTOTLST(:,1:tz_0l)=refmaskTOT(:,tz_0h:nt);
-            refmaskTOTLST(:,tz_0l+1)=refmaskTOT(:,1:tz_0h-1);
+            refmaskTOTLST{ri}(:,1:tz_0l)=refmaskTOT(:,tz_0h:nt);
+            refmaskTOTLST{ri}(:,tz_0l+1)=refmaskTOT(:,1:tz_0h-1);
         elseif mdiv==4&&mi==1
             refmaskDJF=r{ri,mi}.ref2mask;
-            refmaskDJFLST(:,1:tz_0l)=refmaskDJF(:,tz_0h:nt);
-            refmaskDJFLST(:,tz_0l+1:nt)=refmaskDJF(:,1:tz_0h-1);
+            refmaskDJFLST{ri}(:,1:tz_0l)=refmaskDJF(:,tz_0h:nt);
+            refmaskDJFLST{ri}(:,tz_0l+1:nt)=refmaskDJF(:,1:tz_0h-1);
         elseif mdiv==4&&mi==2
             refmaskMAM=r{ri,mi}.ref2mask;
-            refmaskMAMLST(:,1:tz_0l)=refmaskMAM(:,tz_0h:nt);
-            refmaskMAMLST(:,tz_0l+1:nt)=refmaskMAM(:,1:tz_0h-1);
+            refmaskMAMLST{ri}(:,1:tz_0l)=refmaskMAM(:,tz_0h:nt);
+            refmaskMAMLST{ri}(:,tz_0l+1:nt)=refmaskMAM(:,1:tz_0h-1);
         elseif mdiv==4&&mi==3
             refmaskJJA=r{ri,mi}.ref2mask;
-            refmaskJJALST(:,1:tz_0l)=refmaskJJA(:,tz_0h:nt);
-            refmaskJJALST(:,tz_0l+1:nt)=refmaskJJA(:,1:tz_0h-1);
+            refmaskJJALST{ri}(:,1:tz_0l)=refmaskJJA(:,tz_0h:nt);
+            refmaskJJALST{ri}(:,tz_0l+1:nt)=refmaskJJA(:,1:tz_0h-1);
         elseif mdiv==4&&mi==4
             refmaskSON=r{ri,mi}.ref2mask;
-            refmaskSONLST(:,1:tz_0l)=refmaskSON(:,tz_0h:nt);
-            refmaskSONLST(:,tz_0l+1:nt)=refmaskSON(:,1:tz_0h-1);
+            refmaskSONLST{ri}(:,1:tz_0l)=refmaskSON(:,tz_0h:nt);
+            refmaskSONLST{ri}(:,tz_0l+1:nt)=refmaskSON(:,1:tz_0h-1);
         end
         clear nums
         t24 = [-0.5:1:24.5];
         h24 = [450:450:13500];
         h_num = 450/(h(2)-h(1));
         t_num = 3600/(t(2)-t(1));
+    end
+end
+
+for ri = 1:3
+    for mi = 1:mdiv
         if mdiv==4
             for i=1:24
                 for hi=1:length(h24)
-                    data=refmaskMAMLST;
+                    data=refmaskMAMLST{ri};
                     instmat=data((hi-1)*h_num+1:hi*h_num,(i-1)*t_num+1:i*t_num);
                     refmaskMAMLST_24(hi,i+1)=mean(instmat(~isnan(instmat)));
                     clear data instmat
-                    data=refmaskJJALST;
+                    data=refmaskJJALST{ri};
                     instmat=data((hi-1)*h_num+1:hi*h_num,(i-1)*t_num+1:i*t_num);
                     refmaskJJALST_24(hi,i+1)=mean(instmat(~isnan(instmat)));
                     clear data instmat
-                    data=refmaskSONLST;
+                    data=refmaskSONLST{ri};
                     instmat=data((hi-1)*h_num+1:hi*h_num,(i-1)*t_num+1:i*t_num);
                     refmaskSONLST_24(hi,i+1)=mean(instmat(~isnan(instmat)));
                     clear data instmat
-                    data=refmaskDJFLST;
+                    data=refmaskDJFLST{ri};
                     instmat=data((hi-1)*h_num+1:hi*h_num,(i-1)*t_num+1:i*t_num);
                     refmaskDJFLST_24(hi,i+1)=mean(instmat(~isnan(instmat)));
                     clear data instmat
@@ -112,7 +122,7 @@ for mi = 1:mdiv
         else
             for i=1:24
                 for hi=1:length(h24)
-                    data=refmaskTOTLST;
+                    data=refmaskTOTLST{ri};
                     instmat=data((hi-1)*h_num+1:hi*h_num,(i-1)*t_num+1:i*t_num);
                     refmaskTOTLST_24(hi,i+1)=mean(instmat(~isnan(instmat)));
                     clear data instmat
@@ -121,6 +131,6 @@ for mi = 1:mdiv
             refmaskTOTLST_24(:,1)=refmaskTOTLST_24(:,25);
             refmaskTOTLST_24(:,26)=refmaskTOTLST_24(:,2);
         end
-        comp_outfile
     end
+    comp_outfile
 end

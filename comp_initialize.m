@@ -58,11 +58,6 @@ r{4}.prefix_filename{2}='2min_raincol';
 r{5}.prefix_filename{1}='hourly_clearcol';
 r{5}.prefix_filename{2}='2min_clearcol';
 
-r{1}.outFileName = [radartype 'total' site];
-r{2}.outFileName = [radartype 'rainsys' site];
-r{3}.outFileName = [radartype 'clear' site];
-r{4}.outFileName = [radartype 'raincol' site];
-r{5}.outFileName = [radartype 'clearcol' site];
 
 
 if mdiv==1

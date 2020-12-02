@@ -1,3 +1,10 @@
+for mi = 1:4
+r{1,mi}.outFileName = [radartype 'total' site];
+r{2,mi}.outFileName = [radartype 'rainsys' site];
+r{3,mi}.outFileName = [radartype 'clear' site];
+end
+%r{4}.outFileName = [radartype 'raincol' site];
+%r{5}.outFileName = [radartype 'clearcol' site];
 if mdiv==4
     %% OUTFILE SETUP FOR PLOTTING
     % define var, name, xax xlim xlb, yax, ylim, ylb, prefix_filename
@@ -6,10 +13,10 @@ if mdiv==4
     out{1,2}.var=refmaskJJALST_24*100;
     out{1,3}.var=refmaskSONLST_24*100;
     out{1,4}.var=refmaskDJFLST_24*100;
-    out{2,1}.var=refmaskMAMLST*100;
-    out{2,2}.var=refmaskJJALST*100;
-    out{2,3}.var=refmaskSONLST*100;
-    out{2,4}.var=refmaskDJFLST*100;
+    out{2,1}.var=refmaskMAMLST{ri}*100;
+    out{2,2}.var=refmaskJJALST{ri}*100;
+    out{2,3}.var=refmaskSONLST{ri}*100;
+    out{2,4}.var=refmaskDJFLST{ri}*100;
     contourflag=0;
     contourline=2;
 
